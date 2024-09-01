@@ -3,18 +3,20 @@ local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/d
 local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/InterfaceManager.lua"))()
 
 local Window = Fluent:CreateWindow({
-    Title = "Fluent " .. Fluent.Version,
-    SubTitle = "by dawid",
+    Title = "Wild Horse Islands",
+    SubTitle = "by Rattles",
     TabWidth = 160,
     Size = UDim2.fromOffset(580, 460),
-    Acrylic = true, -- The blur may be detectable, setting this to false disables blur entirely
+    Acrylic = true,
     Theme = "Dark",
-    MinimizeKey = Enum.KeyCode.LeftControl -- Used when theres no MinimizeKeybind
+    MinimizeKey = Enum.KeyCode.Home
 })
 
 --Fluent provides Lucide Icons https://lucide.dev/icons/ for the tabs, icons are optional
 local Tabs = {
-    Main = Window:AddTab({ Title = "Main", Icon = "" }),
+    Main = Window:AddTab({ Title = "Main", Icon = "house" }),
+    Visuals = Window:AddTab({ Title = "Visuals", Icon = "eye" }),
+    AutoFarm = Window:AddTab({ Title = "Auto Farm", Icon = "lasso" }),
     Settings = Window:AddTab({ Title = "Settings", Icon = "settings" })
 }
 
@@ -28,41 +30,13 @@ do
         Duration = 5 -- Set to nil to make the notification not disappear
     })
 
-
-
-    Tabs.Main:AddParagraph({
-        Title = "Paragraph",
-        Content = "This is a paragraph.\nSecond line!"
-    })
-
-
-
     Tabs.Main:AddButton({
         Title = "Button",
         Description = "Very important button",
         Callback = function()
-            Window:Dialog({
-                Title = "Title",
-                Content = "This is a dialog",
-                Buttons = {
-                    {
-                        Title = "Confirm",
-                        Callback = function()
-                            print("Confirmed the dialog.")
-                        end
-                    },
-                    {
-                        Title = "Cancel",
-                        Callback = function()
-                            print("Cancelled the dialog.")
-                        end
-                    }
-                }
-            })
+            print("Button clicked!")
         end
     })
-
-
 
     local Toggle = Tabs.Main:AddToggle("MyToggle", {Title = "Toggle", Default = false })
 
