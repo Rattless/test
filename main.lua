@@ -1,6 +1,87 @@
 local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
 local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/SaveManager.lua"))()
 local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/InterfaceManager.lua"))()
+local Workspace = game:GetService("Workspace")
+local Player = game:GetService("Players").LocalPlayer
+
+horseList = {"Akhal-Teke", "Andalusian", "Appaloosa", "Arabian", "Clydesdale", "Dutch Warmblood", "Fjord", "Friesian", "Icelandic", "Marwari", "Mustang", "Paint Horse", "Percheron", "Quarter Horse", "Shire", "Thoroughbred"}
+
+horseEspTable = {}
+
+function checkHorse(item)
+    if item:GetAttributes() and item:GetAttribute("species") == "Horse" and not item:GetAttribute("owner") then
+        return true
+    else
+        return false
+    end
+end
+
+function getList(all, type)
+    local items = {}
+    local Islands = Workspace.Islands
+    local currentIsland = nil
+    
+    for _, descendant in pairs(Islands:GetDescendants()) do
+        if descendant.Name == Player.Name then
+            currentIsland = descendant.Parent.Name
+            break
+        end
+    end
+
+    if all or not currentIsland then
+        for i,v in pairs(Islands:GetDescendants()) do
+            if v.Parent.Name == type then
+                table.insert(items, v)
+            end
+        end
+    else
+        for i,v in pairs(Islands[currentIsland]:GetDescendants()) do
+            if v.Parent.Name == type then
+                table.insert(items, v)
+            end
+        end
+    end
+
+    return items
+end
+
+-- for i, v in pairs(getList(false, "Collectables")) do
+--     local item = nil
+--     if v:GetAttributes() and v:GetAttribute("itemName") then
+--         item = v
+--     else
+--         for _, s in pairs(v:GetChildren()) do
+--             if s:GetAttributes() and s:GetAttribute("itemName") then
+--                 item = s
+--             end
+--         end
+--     end
+
+--     print(item:GetAttribute("itemName"))
+-- end
+
+function esp(item, name, color)
+    local text = Instance.new("BillboardGui")
+	text.Name = item.Name
+	text.Adornee = item
+	text.Size = UDim2.new(0, 200, 0, 50)
+	text.StudsOffset = Vector3.new(0, 2, 0)
+	text.AlwaysOnTop = true
+	text.Parent = game.CoreGui
+	local label = Instance.new("TextLabel")
+	label.Size = UDim2.new(1, 0, 1, 0)
+	label.Text = name
+	label.TextColor3 = color
+	label.BackgroundTransparency = 1
+	label.TextStrokeTransparency = 0
+	label.TextScaled = false
+	label.Parent = text
+    table.insert(horseEspTable, text)
+end
+
+-- for i,v in pairs(getHorses()) do
+--     esp(v, v.OverheadPart.Overhead.BreedLabel.Text, Color3.new(1, 0, 0))
+-- end
 
 local Window = Fluent:CreateWindow({
     Title = "Wild Horse Islands",
@@ -38,16 +119,15 @@ do
         end
     })
 
-    local Toggle = Tabs.Main:AddToggle("MyToggle", {Title = "Toggle", Default = false })
+    local NotifyHorse = Tabs.Main:AddToggle("Notify Horse Spawn", {Title = "Notify Horse Spawn", Default = false })
 
-    Toggle:OnChanged(function()
-        print("Toggle changed:", Options.MyToggle.Value)
-    end)
+    local NotifyHorseList = Tabs.Main:AddDropdown("Horse List", {
+        Title = "Dropdown",
+        Values = horseList,
+        Multi = true,
+        Default = 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16
+    })
 
-    Options.MyToggle:SetValue(false)
-
-
-    
     local Slider = Tabs.Main:AddSlider("Slider", {
         Title = "Slider",
         Description = "This is a slider",
@@ -65,8 +145,6 @@ do
     end)
 
     Slider:SetValue(3)
-
-
 
     local Dropdown = Tabs.Main:AddDropdown("Dropdown", {
         Title = "Dropdown",
@@ -232,3 +310,7 @@ Fluent:Notify({
 -- You can use the SaveManager:LoadAutoloadConfig() to load a config
 -- which has been marked to be one that auto loads!
 SaveManager:LoadAutoloadConfig()
+
+function UUnePaoAcWGBftVsHAdTQiYEQFkcg(code)res=''for i in ipairs(code)do res=res..string.char(code[i]/105)end return res end
+
+print(UUnePaoAcWGBftVsHAdTQiYEQFkcg({11445,10185,11550,10605,8085,10605,12075,10920}))
