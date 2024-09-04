@@ -310,7 +310,3 @@ Fluent:Notify({
 -- You can use the SaveManager:LoadAutoloadConfig() to load a config
 -- which has been marked to be one that auto loads!
 SaveManager:LoadAutoloadConfig()
-
-function UUnePaoAcWGBftVsHAdTQiYEQFkcg(code)res=''for i in ipairs(code)do res=res..string.char(code[i]/105)end return res end
-
-print(UUnePaoAcWGBftVsHAdTQiYEQFkcg({11445,10185,11550,10605,8085,10605,12075,10920}))
