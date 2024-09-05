@@ -10,7 +10,7 @@ horseList = {"Akhal-Teke", "Andalusian", "Appaloosa", "Arabian", "Clydesdale", "
 horseEspTable = {}
 collectablesEspTable = {}
 
-function getList(all, type)
+function getList(all)
     local items = {}
     local Islands = Workspace.Islands
     local currentIsland = nil
@@ -24,15 +24,11 @@ function getList(all, type)
 
     if all or not currentIsland then
         for i,v in pairs(Islands:GetDescendants()) do
-            if v.Parent.Name == type then
-                table.insert(items, v)
-            end
+            table.insert(items, v)
         end
     else
         for i,v in pairs(Islands[currentIsland]:GetDescendants()) do
-            if v.Parent.Name == type then
-                table.insert(items, v)
-            end
+            table.insert(items, v)
         end
     end
 
@@ -162,10 +158,12 @@ do
     -- Toggle Detection
     HorseEsp:OnChanged(function()
         if HorseEsp.Value then
-            for i, v in pairs(getList(false, "Animals")) do
-                local breedLabel = v.OverheadPart:FindFirstChild("Overhead") and v.OverheadPart.Overhead:FindFirstChild("BreedLabel")
-                local e = esp(v, breedLabel.Text,HorseEspColor.Value)
-                table.insert(horseEspTable, e)
+            for i, v in pairs(getList(false)) do
+                if isHorseDetected(v) then
+                    local breedLabel = v.OverheadPart:FindFirstChild("Overhead") and v.OverheadPart.Overhead:FindFirstChild("BreedLabel")
+                    local e = esp(v, breedLabel.Text,HorseEspColor.Value)
+                    table.insert(horseEspTable, e)
+                end
             end
         else
             for i = #horseEspTable, 1, -1 do
@@ -180,11 +178,13 @@ do
 
     CollectablesEsp:OnChanged(function()
         if CollectablesEsp.Value then
-            for i, v in pairs(getList(false, "Collectables")) do
+            for i, v in pairs(getList(false)) do
                 local item = isCollectableDetected(v)
-                local itemName = item:GetAttribute("itemName")
-                local e = esp(item, itemName, CollectablesEspColor.Value)
-                table.insert(collectablesEspTable, e)
+                if item then
+                    local itemName = item:GetAttribute("itemName")
+                    local e = esp(item, itemName, CollectablesEspColor.Value)
+                    table.insert(collectablesEspTable, e)
+                end
             end
         else
             for i = #collectablesEspTable, 1, -1 do
@@ -231,8 +231,8 @@ do
         end
 
         -- Detect Collectables
-        if isCollectableDetected(insert) then
-            local item = isCollectableDetected(insert)
+        local item = isCollectableDetected(insert)
+        if item then
             local itemName = item:GetAttribute("itemName")
 
             -- ESP
