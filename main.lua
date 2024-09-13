@@ -3,63 +3,89 @@ local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/d
 local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/InterfaceManager.lua"))()
 local UserInputService = game:GetService("UserInputService")
 local Workspace = game:GetService("Workspace")
+local RunService = game:GetService("RunService")
 local Player = game:GetService("Players").LocalPlayer
 
 horseList = {"Akhal-Teke", "Andalusian", "Appaloosa", "Arabian", "Clydesdale", "Dutch Warmblood", "Fjord", "Friesian", "Icelandic", "Marwari", "Mustang", "Paint Horse", "Percheron", "Quarter Horse", "Shire", "Thoroughbred"}
+islandList = {"Mainland", "Blizzard Island", "Forest Island", "Royal Island", "Desert Island", "Mountain Island", "Jungle Island", "Lunar Island", "Volcano Island", "Training island", "RP Island", "Wild Island", "Trading Hub", "Breeding Hub"}
 
+local tool = nil
+local remote = 1
+local remoteFound = false
 horseEspTable = {}
 collectablesEspTable = {}
+oresEspTable = {}
 
 function getList(all)
-    local items = {}
     local Islands = Workspace.Islands
     local currentIsland = nil
 
-    for _, descendant in pairs(Islands:GetDescendants()) do
-        if descendant.Name == Player.Name then
-            currentIsland = descendant.Parent.Name
+    for _, v in pairs(Islands:GetDescendants()) do
+        if v.Name == Player.Name then
+            currentIsland = v.Parent
             break
         end
     end
 
-    if all or not currentIsland then
-        for i,v in pairs(Islands:GetDescendants()) do
-            table.insert(items, v)
-        end
-    else
-        for i,v in pairs(Islands[currentIsland]:GetDescendants()) do
-            table.insert(items, v)
-        end
-    end
-
-    return items
+    return currentIsland:GetDescendants()
 end
 
--- for i, v in pairs(getList(false, "Collectables")) do
---     local item = nil
---     if v:GetAttributes() and v:GetAttribute("itemName") then
---         item = v
---     else
---         for _, s in pairs(v:GetChildren()) do
---             if s:GetAttributes() and s:GetAttribute("itemName") then
---                 item = s
---             end
---         end
---     end
+function callRemoteFunctions(...)
+    for i, v in pairs(game:GetService("ReplicatedStorage").Communication.Functions:GetChildren()) do
+        v:FireServer(...)
+    end
+end
 
---     print(item:GetAttribute("itemName"))
--- end
+function callRemoteEvents(...)
+    for i, v in pairs(game:GetService("ReplicatedStorage").Communication.Events:GetChildren()) do
+        v:FireServer(...)
+    end
+end
+
+local function findTargetMeshPart(target)
+    for _, descendant in ipairs(target:GetChildren()) do
+        if descendant:IsA("MeshPart") then
+            return descendant
+        end
+    end
+    return nil
+end
 
 local function isCollectableDetected(insert)
     if not insert:IsA("Model") then return false end
     local itemName = insert:GetAttribute("itemName")
-    if itemName then
+    local health = insert:GetAttribute("health")
+    local shopItem = insert:GetAttribute("isShopItem")
+    if itemName and not health and not shopItem then
         return insert
     end
 
     for _, child in ipairs(insert:GetChildren()) do
         local childItemName = child:GetAttribute("itemName")
-        if childItemName then
+        local childHealth = child:GetAttribute("health")
+        local childShopItem = child:GetAttribute("isShopItem")
+        if childItemName and not childHealth and not childShopItem then
+            return child
+        end
+    end
+
+    return false
+end
+
+local function isOreDetected(insert)
+    if not insert:IsA("Model") then return false end
+    local itemName = insert:GetAttribute("itemName")
+    local health = insert:GetAttribute("health")
+    local shopItem = insert:GetAttribute("isShopItem")
+    if itemName and health and not shopItem then
+        return insert
+    end
+
+    for _, child in ipairs(insert:GetChildren()) do
+        local childItemName = child:GetAttribute("itemName")
+        local childHealth = child:GetAttribute("health")
+        local childShopItem = child:GetAttribute("isShopItem")
+        if childItemName and childHealth and not childShopItem then
             return child
         end
     end
@@ -113,6 +139,7 @@ local Tabs = {
     Main = Window:AddTab({ Title = "Main", Icon = "house" }),
     Visuals = Window:AddTab({ Title = "Visuals", Icon = "eye" }),
     AutoFarm = Window:AddTab({ Title = "Auto Farm", Icon = "lasso" }),
+    Teleport = Window:AddTab({ Title = "Teleport", Icon = "plane" }),
     Settings = Window:AddTab({ Title = "Settings", Icon = "settings" })
 }
 
@@ -145,6 +172,11 @@ do
         Default = false
     })
 
+    local OresEsp = Tabs.Visuals:AddToggle("Ores Esp", {
+        Title = "Ores Esp",
+        Default = false
+    })
+
     local HorseEspColor = Tabs.Visuals:AddColorpicker("Horse Colorpicker", {
         Title = "Horse Esp Color",
         Default = Color3.fromRGB(255, 255, 0)
@@ -155,7 +187,12 @@ do
         Default = Color3.fromRGB(0, 255, 0)
     })
 
-    -- Toggle Detection
+    local OresEspColor = Tabs.Visuals:AddColorpicker("Collectable Colorpicker", {
+        Title = "Ores Esp Color",
+        Default = Color3.fromRGB(0, 255, 200)
+    })
+
+    -- Visuals Toggle Detection
     HorseEsp:OnChanged(function()
         if HorseEsp.Value then
             for i, v in pairs(getList(false)) do
@@ -197,11 +234,223 @@ do
         end
     end)
 
+    OresEsp:OnChanged(function()
+        if OresEsp.Value then
+            for i, v in pairs(getList(false)) do
+                local item = isOreDetected(v)
+                if item then
+                    local itemName = item:GetAttribute("itemName")
+                    local mesh = findTargetMeshPart(item)
+                    local e = esp(item, itemName, if mesh then mesh.Color else OresEspColor.Value)
+                    table.insert(oresEspTable, e)
+                end
+            end
+        else
+            for i = #oresEspTable, 1, -1 do
+                local v = oresEspTable[i]
+                if v then
+                    v:Destroy()
+                    table.remove(oresEspTable, i)
+                end
+            end
+        end
+    end)
+
     HorseEspColor:OnChanged(function()
         for _, v in pairs(horseEspTable) do
             v:FindFirstChild("TextLabel").TextColor3 = HorseEspColor.Value
         end
     end)
+
+     CollectablesEspColor:OnChanged(function()
+        for _, v in pairs(collectablesEspTable) do
+            v:FindFirstChild("TextLabel").TextColor3 = CollectablesEspColor.Value
+        end
+    end)
+
+    OresEspColor:OnChanged(function()
+        for _, v in pairs(oresEspTable) do
+            v:FindFirstChild("TextLabel").TextColor3 = OresEspColor.Value
+        end
+    end)
+
+    -- Auto Farm
+    local ToggleAutoFarm = Tabs.AutoFarm:AddToggle("Auto Farm", {
+        Title = "Auto Farm",
+        Description = "Start Auto Farm",
+        Default = false
+    })
+
+    local AutoFarmSelect = Tabs.AutoFarm:AddDropdown("Auto Farm Select", {
+        Title = "Select",
+        Description = "Select what to farm",
+        Values = {"Horses", "Ores","Collectables"},
+        Multi = false,
+        Default = 1
+    })
+
+    local OnlyCurrent = Tabs.AutoFarm:AddToggle("Only Current Island", {
+        Title = "Only Current Island",
+        Description = "Only farm from current island",
+        Default = false
+    })
+
+    local RemoteId = Tabs.AutoFarm:AddInput("RemoteId", {
+        Title = "RemoteID",
+        Default = 1,
+        Placeholder = 1,
+        Numeric = true,
+        Finished = true,
+        Callback = function(Value)
+            remote = Value
+        end
+    })
+
+    local Delay = Tabs.AutoFarm:AddInput("Delay", {
+        Title = "Delay",
+        Default = 1,
+        Placeholder = 1,
+        Numeric = true,
+        Finished = true,
+    })
+
+    local function scanForTarget()
+        local target = nil
+        local targetMesh = nil
+    
+        if AutoFarmSelect.Value == "Horses" then
+            for i, v in pairs(getList(not OnlyCurrent.Value)) do
+                if isHorseDetected(v) then
+                    target = v
+                    targetMesh = findTargetMeshPart(v)
+                    break
+                end
+            end
+        elseif AutoFarmSelect.Value == "Ores" then
+            for i, v in pairs(getList(true)) do
+                if isOreDetected(v) then
+                    targetMesh = findTargetMeshPart(v)
+                    if targetMesh then
+                        target = v
+                        break
+                    end
+                end
+            end
+        elseif AutoFarmSelect.Value == "Collectables" then
+            for i, v in pairs(getList(true)) do
+                if isCollectableDetected(v) then
+                    target = v
+                    targetMesh = findTargetMeshPart(v)
+                    break
+                end
+            end
+        end
+        return target, targetMesh
+    end
+
+    -- Auto Farm Toggle Detection
+    ToggleAutoFarm:OnChanged(function()
+        local target = nil
+        local targetMesh = nil
+        local heartbeatConnection = nil
+
+        local function resetTarget()
+            target = nil
+            targetMesh = nil
+            if heartbeatConnection then
+                heartbeatConnection:Disconnect()
+                heartbeatConnection = nil
+            end
+        end
+
+        local scanLoop = coroutine.create(function()
+            while ToggleAutoFarm.Value do
+
+                if not target or not targetMesh then
+                    target, targetMesh = scanForTarget()
+                end
+
+                if target and targetMesh then
+                    if not heartbeatConnection then
+                        heartbeatConnection = RunService.Heartbeat:Connect(function()
+                            if target and targetMesh and ToggleAutoFarm.Value then
+                                local offset = Vector3.new(0, 5, 0)
+                                Player.Character.HumanoidRootPart.CFrame = targetMesh.CFrame + offset
+                            else
+                                resetTarget()
+                            end
+                        end)
+                    end
+
+                    -- coroutine.wrap(function()
+                    --     while target and targetMesh and ToggleAutoFarm.Value do
+                    --         task.wait(0.5)
+                    --         -- if remote >= 73 and not remoteFound then
+                    --         --     remote = 1
+                    --         -- end
+
+                    --         print("Trying Remote: " .. remote)
+                    --         local remoteEvent = game:GetService("ReplicatedStorage").Communication.Functions:GetChildren()[tonumber(remote)]
+                    --         local args = {
+                    --             [1] = "",
+                    --             [2] = "Engage",
+                    --             [3] = target
+                    --         }
+                    --         -- local args = {
+                    --         --     [1] = "Collect",
+                    --         --     [2] = target
+                    --         -- }
+
+                    --         remoteEvent:FireServer(unpack(args))
+                    --         -- remote += 1
+                    --         -- callRemoteFunctions(unpack(args))
+                    --         targetMesh.Destroying:Wait()
+                    --     end
+                    -- end)()
+
+                    task.wait(0.5)
+                    if AutoFarmSelect.Value == "Ores" then
+                        local remoteEvent = game:GetService("ReplicatedStorage").Communication.Functions:GetChildren()[tonumber(remote)]
+                        local args = {
+                            [1] = "",
+                            [2] = "Engage",
+                            [3] = target
+                        }
+                        remoteEvent:FireServer(unpack(args))
+                    end
+
+                    targetMesh.Destroying:Wait()
+                    resetTarget()
+                else
+                    wait(1)
+                end
+            end
+
+            resetTarget()
+        end)
+
+        if ToggleAutoFarm.Value then
+            coroutine.resume(scanLoop)
+        else
+            resetTarget()
+        end
+    end)
+
+    -- Teleport
+    local TeleportLocation = Tabs.Teleport:AddDropdown("Teleport Location", {
+        Title = "Teleport Location",
+        Description = "Select an island to teleport to",
+        Values = islandList,
+        Multi = false,
+        Default = 1
+    })
+
+    Tabs.Teleport:AddButton({
+        Title = "Teleport",
+        Callback = function()
+            callRemoteFunctions("", "Travel", TeleportLocation.Value)
+        end
+    })
 
     -- Spawn Detection
     Workspace.Islands.DescendantAdded:Connect(function(insert)
@@ -242,7 +491,37 @@ do
             end
         end
 
+        -- Detect Ores
+        local ores = isOreDetected(insert)
+        if ores then
+            local itemName = ores:GetAttribute("itemName")
+
+            -- ESP
+            if OresEsp.Value then
+                local mesh = findTargetMeshPart(ores)
+                local e = esp(item, itemName, if mesh then mesh.Color else OresEspColor.Value)
+                table.insert(oresEspTable, e)
+            end
+        end
+
     end)
+
+    -- Detect Remote
+    for _, v in ipairs(game:GetService("ReplicatedStorage").Communication.Events:GetDescendants()) do
+        if v:IsA("RemoteEvent") then
+            v.OnClientEvent:Connect(function(...)
+                local args = {...}
+                if args[2] == "equipped" then
+                    if args[3] == nil then
+                        tool = nil
+                    else
+                        tool = args[5]
+                    end
+                end
+            end)
+        end
+    end
+
 end
 
 SaveManager:SetLibrary(Fluent)
