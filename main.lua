@@ -77,7 +77,8 @@ local function isOreDetected(insert)
     local itemName = insert:GetAttribute("itemName")
     local health = insert:GetAttribute("health")
     local shopItem = insert:GetAttribute("isShopItem")
-    if itemName and health and not shopItem then
+    local scale = insert:GetAttribute("__originalScale")
+    if itemName and health and scale and not shopItem then
         return insert
     end
 
@@ -85,7 +86,8 @@ local function isOreDetected(insert)
         local childItemName = child:GetAttribute("itemName")
         local childHealth = child:GetAttribute("health")
         local childShopItem = child:GetAttribute("isShopItem")
-        if childItemName and childHealth and not childShopItem then
+        local childScale = child:GetAttribute("__originalScale")
+        if childItemName and childScale and childHealth and not childShopItem then
             return child
         end
     end
