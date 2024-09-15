@@ -7,7 +7,7 @@ local RunService = game:GetService("RunService")
 local Player = game:GetService("Players").LocalPlayer
 
 horseList = {"Akhal-Teke", "Andalusian", "Appaloosa", "Arabian", "Clydesdale", "Dutch Warmblood", "Fjord", "Friesian", "Icelandic", "Marwari", "Mustang", "Paint Horse", "Percheron", "Quarter Horse", "Shire", "Thoroughbred"}
-rockList = {"Rock", }
+rockList = {"All", "Amethyst", "Bronze", "Copper", "Diamond", "Emerald", "Gold", "Iron", "Prismatic", "Tin", "Erupted"}
 islandList = {"Mainland", "Blizzard Island", "Forest Island", "Royal Island", "Desert Island", "Mountain Island", "Jungle Island", "Lunar Island", "Volcano Island", "Training island", "RP Island", "Wild Island", "Trading Hub", "Breeding Hub"}
 
 local tool = nil
@@ -62,7 +62,6 @@ local function containsName(itemName, nameList)
 end
 
 local function isCollectableDetected(insert)
-    if not insert:IsA("Model") then return false end
     local itemName = insert:GetAttribute("itemName")
     local health = insert:GetAttribute("health")
     local shopItem = insert:GetAttribute("isShopItem")
@@ -83,9 +82,8 @@ local function isCollectableDetected(insert)
 end
 
 local function isRockDetected(insert)
-    local nameList = {"Rock", "Crystal"}
+    local nameList = {"Rock", "Crystal", "Erupted"}
 
-    if not insert:IsA("Model") then return false end
     local itemName = insert:GetAttribute("itemName")
     local health = insert:GetAttribute("health")
     local shopItem = insert:GetAttribute("isShopItem")
@@ -111,7 +109,6 @@ local function isRockDetected(insert)
 end
 
 local function isHorseDetected(insert)
-    if not insert:IsA("Model") then return false end
     if not insert:FindFirstChild("OverheadPart") then return false end
     local species = insert:GetAttribute("species")
     local owner = insert:GetAttribute("owner")
@@ -160,8 +157,6 @@ local Tabs = {
     Settings = Window:AddTab({ Title = "Settings", Icon = "settings" })
 }
 
-local Options = Fluent.Options
-
 do
     -- Main
     local NotifyHorse = Tabs.Main:AddToggle("Notify Horse Spawn", {
@@ -176,6 +171,11 @@ do
         Values = horseList,
         Multi = true,
         Default = {"Shire"}
+    })
+
+    local NoFallingLava = Tabs.Main:AddToggle("No Falling Lava", {
+        Title = "No Falling Lava",
+        Default = false
     })
 
     Tabs.Main:AddButton({
@@ -324,6 +324,14 @@ do
         Default = 1
     })
 
+    local RocksWhitelist = Tabs.AutoFarm:AddDropdown("Rocks Whitelist", {
+        Title = "Rocks Whitelist",
+        Description = "Select rocks to farm",
+        Values = rockList,
+        Multi = false,
+        Default = {"All"}
+    })
+
     local OnlyCurrent = Tabs.AutoFarm:AddToggle("Only Current Island", {
         Title = "Only Current Island",
         Description = "Only farm from current island",
@@ -352,7 +360,7 @@ do
     local function scanForTarget()
         local target = nil
         local targetMesh = nil
-    
+
         if AutoFarmSelect.Value == "Horses" then
             for i, v in pairs(getList(not OnlyCurrent.Value)) do
                 if isHorseDetected(v) then
@@ -366,8 +374,15 @@ do
                 if isRockDetected(v) then
                     targetMesh = findTargetMeshPart(v)
                     if targetMesh then
-                        target = v
-                        break
+                        if RocksWhitelist.Value == "All" then
+                            target = v
+                            break
+                        else
+                            if containsName(v.GetAttribute("itemName"), RocksWhitelist.Values) then
+                                target = v
+                                break
+                            end
+                        end
                     end
                 end
             end
@@ -409,7 +424,7 @@ do
                     if not heartbeatConnection then
                         heartbeatConnection = RunService.Heartbeat:Connect(function()
                             if target and targetMesh and ToggleAutoFarm.Value then
-                                local offset = Vector3.new(0, 5, 0)
+                                local offset = Vector3.new(0, 8, 0)
                                 Player.Character.HumanoidRootPart.CFrame = targetMesh.CFrame + offset
                             else
                                 resetTarget()
@@ -466,7 +481,14 @@ do
 
     -- Spawn Detection
     Workspace.Islands.DescendantAdded:Connect(function(insert)
+        if not insert:IsA("Model") then return end
         task.wait(0.1)
+
+        -- Detect Falling Lava
+        if NoFallingLava.Value and insert.Name == "FallingLava" then
+            insert:Destroy()
+            return
+        end
 
         -- Detect Horses
         if isHorseDetected(insert) then
