@@ -474,7 +474,7 @@ do
 
     -- Spawn Detection
     Workspace.Islands.DescendantAdded:Connect(function(insert)
-        task.wait(0.1)
+        task.wait(0.2)
 
         -- Detect Horses
         if isHorseDetected(insert) then
@@ -514,8 +514,8 @@ do
         -- Detect Ores
         local rock = isRockDetected(insert)
         if rock then
-            local itemName = rock:GetAttribute("itemName")
-            local mesh = findTargetMeshPart(rock)
+            local itemName = insert:GetAttribute("itemName")
+            local mesh = findTargetMeshPart(insert)
 
             -- ESP
             if RockEsp.Value then
