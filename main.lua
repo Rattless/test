@@ -14,7 +14,7 @@ local remote = 1
 local remoteFound = false
 horseEspTable = {}
 collectablesEspTable = {}
-oresEspTable = {}
+rockEspTable = {}
 
 function getList(all)
     local Islands = Workspace.Islands
@@ -72,7 +72,7 @@ local function isCollectableDetected(insert)
     return false
 end
 
-local function isOreDetected(insert)
+local function isRockDetected(insert)
     if not insert:IsA("Model") then return false end
     local itemName = insert:GetAttribute("itemName")
     local health = insert:GetAttribute("health")
@@ -126,6 +126,16 @@ function esp(item, name, color)
     return text
 end
 
+function clearTable(table)
+    for i = #table, 1, -1 do
+        local v = table[i]
+        if v then
+            v:Destroy()
+            table.remove(table, i)
+        end
+    end
+end
+
 local Window = Fluent:CreateWindow({
     Title = "Wild Horse Islands",
     SubTitle = "by Rattles",
@@ -174,8 +184,8 @@ do
         Default = false
     })
 
-    local OresEsp = Tabs.Visuals:AddToggle("Ores Esp", {
-        Title = "Ores Esp",
+    local RockEsp = Tabs.Visuals:AddToggle("Rock Esp", {
+        Title = "Rock Esp",
         Default = false
     })
 
@@ -205,13 +215,7 @@ do
                 end
             end
         else
-            for i = #horseEspTable, 1, -1 do
-                local v = horseEspTable[i]
-                if v then
-                    v:Destroy()
-                    table.remove(horseEspTable, i)
-                end
-            end
+            clearTable(horseEspTable)
         end
     end)
 
@@ -226,35 +230,23 @@ do
                 end
             end
         else
-            for i = #collectablesEspTable, 1, -1 do
-                local v = collectablesEspTable[i]
-                if v then
-                    v:Destroy()
-                    table.remove(collectablesEspTable, i)
-                end
-            end
+            clearTable(collectablesEspTable)
         end
     end)
 
-    OresEsp:OnChanged(function()
-        if OresEsp.Value then
+    RockEsp:OnChanged(function()
+        if RockEsp.Value then
             for i, v in pairs(getList(false)) do
-                local item = isOreDetected(v)
+                local item = isRockDetected(v)
                 if item then
                     local itemName = item:GetAttribute("itemName")
                     local mesh = findTargetMeshPart(item)
                     local e = esp(item, itemName, if mesh then mesh.Color else OresEspColor.Value)
-                    table.insert(oresEspTable, e)
+                    table.insert(rockEspTable, e)
                 end
             end
         else
-            for i = #oresEspTable, 1, -1 do
-                local v = oresEspTable[i]
-                if v then
-                    v:Destroy()
-                    table.remove(oresEspTable, i)
-                end
-            end
+            clearTable(rockEspTable)
         end
     end)
 
@@ -271,7 +263,7 @@ do
     end)
 
     OresEspColor:OnChanged(function()
-        for _, v in pairs(oresEspTable) do
+        for _, v in pairs(rockEspTable) do
             v:FindFirstChild("TextLabel").TextColor3 = OresEspColor.Value
         end
     end)
@@ -494,15 +486,15 @@ do
         end
 
         -- Detect Ores
-        local ores = isOreDetected(insert)
-        if ores then
-            local itemName = ores:GetAttribute("itemName")
+        local rock = isRockDetected(insert)
+        if rock then
+            local itemName = rock:GetAttribute("itemName")
+            local mesh = findTargetMeshPart(rock)
 
             -- ESP
-            if OresEsp.Value then
-                local mesh = findTargetMeshPart(ores)
+            if RockEsp.Value then
                 local e = esp(item, itemName, if mesh then mesh.Color else OresEspColor.Value)
-                table.insert(oresEspTable, e)
+                table.insert(rockEspTable, e)
             end
         end
 
