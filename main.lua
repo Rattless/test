@@ -189,8 +189,8 @@ do
         Default = Color3.fromRGB(0, 255, 0)
     })
 
-    local OresEspColor = Tabs.Visuals:AddColorpicker("Collectable Colorpicker", {
-        Title = "Ores Esp Color",
+    local RockEspColor = Tabs.Visuals:AddColorpicker("Rock Colorpicker", {
+        Title = "Rock Esp Color",
         Default = Color3.fromRGB(0, 255, 200)
     })
 
@@ -243,7 +243,7 @@ do
                 if item then
                     local itemName = item:GetAttribute("itemName")
                     local mesh = findTargetMeshPart(item)
-                    local e = esp(item, itemName, if mesh then mesh.Color else OresEspColor.Value)
+                    local e = esp(item, itemName, if mesh then mesh.Color else RockEspColor.Value)
                     table.insert(rockEspTable, e)
                 end
             end
@@ -270,9 +270,9 @@ do
         end
     end)
 
-    OresEspColor:OnChanged(function()
+    RockEspColor:OnChanged(function()
         for _, v in pairs(rockEspTable) do
-            v:FindFirstChild("TextLabel").TextColor3 = OresEspColor.Value
+            v:FindFirstChild("TextLabel").TextColor3 = RockEspColor.Value
         end
     end)
 
@@ -286,7 +286,7 @@ do
     local AutoFarmSelect = Tabs.AutoFarm:AddDropdown("Auto Farm Select", {
         Title = "Select",
         Description = "Select what to farm",
-        Values = {"Horses", "Ores","Collectables"},
+        Values = {"Horses", "Rocks","Collectables"},
         Multi = false,
         Default = 1
     })
@@ -411,7 +411,7 @@ do
                     -- end)()
 
                     task.wait(0.5)
-                    if AutoFarmSelect.Value == "Ores" then
+                    if AutoFarmSelect.Value == "Rocks" then
                         local remoteEvent = game:GetService("ReplicatedStorage").Communication.Functions:GetChildren()[tonumber(remote)]
                         local args = {
                             [1] = "",
@@ -501,7 +501,7 @@ do
 
             -- ESP
             if RockEsp.Value then
-                local e = esp(item, itemName, if mesh then mesh.Color else OresEspColor.Value)
+                local e = esp(item, itemName, if mesh then mesh.Color else RockEspColor.Value)
                 table.insert(rockEspTable, e)
             end
         end
