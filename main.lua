@@ -163,6 +163,19 @@ do
         Default = {"Shire"}
     })
 
+    local DisableLavaDeath = Tabs.Main:AddButton("Disable Lava Death", {
+        Title = "Disable Lava Death",
+        Description = "Removes All TouchInterest",
+        Callback = function()
+            for _, v in pairs(workspace:GetDescendants()) do
+                if v:IsA("TouchTransmitter") then
+                    v:Destroy()
+                end
+            end
+        end
+    })
+
+
     -- Visuals
     local HorseEsp = Tabs.Visuals:AddToggle("Horse Esp", {
         Title = "Horse Esp",
