@@ -52,6 +52,15 @@ local function findTargetMeshPart(target)
     return nil
 end
 
+local function containsName(itemName, nameList)
+    for _, name in ipairs(nameList) do
+        if string.find(itemName, name) then
+            return true
+        end
+    end
+    return false
+end
+
 local function isCollectableDetected(insert)
     if not insert:IsA("Model") then return false end
     local itemName = insert:GetAttribute("itemName")
@@ -74,22 +83,27 @@ local function isCollectableDetected(insert)
 end
 
 local function isRockDetected(insert)
+    local nameList = {"Rock", "Crystal"}
+
     if not insert:IsA("Model") then return false end
     local itemName = insert:GetAttribute("itemName")
     local health = insert:GetAttribute("health")
     local shopItem = insert:GetAttribute("isShopItem")
-    local scale = insert:GetAttribute("__originalScale")
-    if itemName and health and scale and not shopItem then
-        return insert
+
+    if itemName and health and not shopItem then
+        if containsName(itemName, nameList) then
+            return insert
+        end
     end
 
     for _, child in ipairs(insert:GetChildren()) do
         local childItemName = child:GetAttribute("itemName")
         local childHealth = child:GetAttribute("health")
         local childShopItem = child:GetAttribute("isShopItem")
-        local childScale = child:GetAttribute("__originalScale")
-        if childItemName and childScale and childHealth and not childShopItem then
-            return child
+        if childItemName and childHealth and not childShopItem then
+            if containsName(itemName, nameList) then
+                return child
+            end
         end
     end
 
