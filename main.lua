@@ -171,6 +171,11 @@ do
                     v:Destroy()
                 end
             end
+            Fluent:Notify({
+                Title = "Disabled Lava Death",
+                Content = "You can safely touch lava now.",
+                Duration = 5
+            })
         end
     })
 
