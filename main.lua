@@ -168,7 +168,9 @@ do
         Callback = function()
             for _, v in pairs(workspace:GetDescendants()) do
                 if v:IsA("TouchTransmitter") then
-                    v:Destroy()
+                    if v.Parent.Name == "Part" then
+                        v:Destroy()
+                    end
                 end
             end
             Fluent:Notify({
