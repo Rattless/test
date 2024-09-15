@@ -328,7 +328,7 @@ do
         Title = "Rocks Whitelist",
         Description = "Select rocks to farm",
         Values = rockList,
-        Multi = false,
+        Multi = true,
         Default = {"All"}
     })
 
