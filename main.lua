@@ -13,7 +13,7 @@ local tool = nil
 local remote = 1
 local remoteFound = false
 horseEspTable = {}
-collectablesEspTable = {}
+collectableEspTable = {}
 rockEspTable = {}
 
 function getList(all)
@@ -126,16 +126,6 @@ function esp(item, name, color)
     return text
 end
 
-function clearTable(table)
-    for i = #table, 1, -1 do
-        local v = table[i]
-        if v then
-            v:Destroy()
-            table.remove(table, i)
-        end
-    end
-end
-
 local Window = Fluent:CreateWindow({
     Title = "Wild Horse Islands",
     SubTitle = "by Rattles",
@@ -194,8 +184,8 @@ do
         Default = Color3.fromRGB(255, 255, 0)
     })
 
-    local CollectablesEspColor = Tabs.Visuals:AddColorpicker("Collectable Colorpicker", {
-        Title = "Horse Esp Color",
+    local CollectableEspColor = Tabs.Visuals:AddColorpicker("Collectable Colorpicker", {
+        Title = "Collectable Esp Color",
         Default = Color3.fromRGB(0, 255, 0)
     })
 
@@ -215,7 +205,13 @@ do
                 end
             end
         else
-            clearTable(horseEspTable)
+            for i = #horseEspTable, 1, -1 do
+                local v = horseEspTable[i]
+                if v then
+                    v:Destroy()
+                    table.remove(horseEspTable, i)
+                end
+            end
         end
     end)
 
@@ -225,12 +221,18 @@ do
                 local item = isCollectableDetected(v)
                 if item then
                     local itemName = item:GetAttribute("itemName")
-                    local e = esp(item, itemName, CollectablesEspColor.Value)
-                    table.insert(collectablesEspTable, e)
+                    local e = esp(item, itemName, CollectableEspColor.Value)
+                    table.insert(collectableEspTable, e)
                 end
             end
         else
-            clearTable(collectablesEspTable)
+            for i = #collectableEspTable, 1, -1 do
+                local v = collectableEspTable[i]
+                if v then
+                    v:Destroy()
+                    table.remove(collectableEspTable, i)
+                end
+            end
         end
     end)
 
@@ -246,7 +248,13 @@ do
                 end
             end
         else
-            clearTable(rockEspTable)
+            for i = #rockEspTable, 1, -1 do
+                local v = rockEspTable[i]
+                if v then
+                    v:Destroy()
+                    table.remove(rockEspTable, i)
+                end
+            end
         end
     end)
 
@@ -256,9 +264,9 @@ do
         end
     end)
 
-     CollectablesEspColor:OnChanged(function()
-        for _, v in pairs(collectablesEspTable) do
-            v:FindFirstChild("TextLabel").TextColor3 = CollectablesEspColor.Value
+     CollectableEspColor:OnChanged(function()
+        for _, v in pairs(collectableEspTable) do
+            v:FindFirstChild("TextLabel").TextColor3 = CollectableEspColor.Value
         end
     end)
 
@@ -320,9 +328,9 @@ do
                     break
                 end
             end
-        elseif AutoFarmSelect.Value == "Ores" then
+        elseif AutoFarmSelect.Value == "Rocks" then
             for i, v in pairs(getList(true)) do
-                if isOreDetected(v) then
+                if isRockDetected(v) then
                     targetMesh = findTargetMeshPart(v)
                     if targetMesh then
                         target = v
@@ -480,8 +488,8 @@ do
 
             -- ESP
             if CollectablesEsp.Value then
-                local e = esp(item, itemName, CollectablesEspColor.Value)
-                table.insert(collectablesEspTable, e)
+                local e = esp(item, itemName, CollectableEspColor.Value)
+                table.insert(collectableEspTable, e)
             end
         end
 
