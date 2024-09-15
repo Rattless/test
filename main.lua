@@ -7,6 +7,7 @@ local RunService = game:GetService("RunService")
 local Player = game:GetService("Players").LocalPlayer
 
 horseList = {"Akhal-Teke", "Andalusian", "Appaloosa", "Arabian", "Clydesdale", "Dutch Warmblood", "Fjord", "Friesian", "Icelandic", "Marwari", "Mustang", "Paint Horse", "Percheron", "Quarter Horse", "Shire", "Thoroughbred"}
+rockList = {"Rock", }
 islandList = {"Mainland", "Blizzard Island", "Forest Island", "Royal Island", "Desert Island", "Mountain Island", "Jungle Island", "Lunar Island", "Volcano Island", "Training island", "RP Island", "Wild Island", "Trading Hub", "Breeding Hub"}
 
 local tool = nil
@@ -474,7 +475,7 @@ do
 
     -- Spawn Detection
     Workspace.Islands.DescendantAdded:Connect(function(insert)
-        task.wait(0.2)
+        task.wait(0.1)
 
         -- Detect Horses
         if isHorseDetected(insert) then
@@ -514,12 +515,12 @@ do
         -- Detect Ores
         local rock = isRockDetected(insert)
         if rock then
-            local itemName = insert:GetAttribute("itemName")
-            local mesh = findTargetMeshPart(insert)
+            local itemName = rock:GetAttribute("itemName")
+            local mesh = findTargetMeshPart(rock)
 
             -- ESP
             if RockEsp.Value then
-                local e = esp(item, itemName, if mesh then mesh.Color else RockEspColor.Value)
+                local e = esp(rock, itemName, if mesh then mesh.Color else RockEspColor.Value)
                 table.insert(rockEspTable, e)
             end
         end
