@@ -417,41 +417,18 @@ do
                         end)
                     end
 
-                    -- coroutine.wrap(function()
-                    --     while target and targetMesh and ToggleAutoFarm.Value do
-                    --         task.wait(0.5)
-                    --         -- if remote >= 73 and not remoteFound then
-                    --         --     remote = 1
-                    --         -- end
-
-                    --         print("Trying Remote: " .. remote)
-                    --         local remoteEvent = game:GetService("ReplicatedStorage").Communication.Functions:GetChildren()[tonumber(remote)]
-                    --         local args = {
-                    --             [1] = "",
-                    --             [2] = "Engage",
-                    --             [3] = target
-                    --         }
-                    --         -- local args = {
-                    --         --     [1] = "Collect",
-                    --         --     [2] = target
-                    --         -- }
-
-                    --         remoteEvent:FireServer(unpack(args))
-                    --         -- remote += 1
-                    --         -- callRemoteFunctions(unpack(args))
-                    --         targetMesh.Destroying:Wait()
-                    --     end
-                    -- end)()
-
-                    task.wait(0.5)
-                    if AutoFarmSelect.Value == "Rocks" then
-                        local remoteEvent = game:GetService("ReplicatedStorage").Communication.Functions:GetChildren()[tonumber(remote)]
-                        local args = {
-                            [1] = "",
-                            [2] = "Engage",
-                            [3] = target
-                        }
-                        remoteEvent:FireServer(unpack(args))
+                    if AutoFarmSelect.Value == "Rocks" and target then
+                        task.wait(0.5)
+                        if AutoFarmSelect.Value == "Rocks" then
+                            local remoteEvent = game:GetService("ReplicatedStorage").Communication.Functions:GetChildren()[tonumber(remote)]
+                            local args = {
+                                [1] = "",
+                                [2] = "Engage",
+                                [3] = target
+                            }
+                            remoteEvent:FireServer(unpack(args))
+                        end
+    
                     end
 
                     targetMesh.Destroying:Wait()
