@@ -163,7 +163,7 @@ do
         Default = {"Shire"}
     })
 
-    local DisableLavaDeath = Tabs.Main:AddButton("Disable Lava Death", {
+    Tabs.Main:AddButton("Disable Lava Death", {
         Title = "Disable Lava Death",
         Description = "Removes All TouchInterest",
         Callback = function()
