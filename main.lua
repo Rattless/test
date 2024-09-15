@@ -62,6 +62,7 @@ local function containsName(itemName, nameList)
 end
 
 local function isCollectableDetected(insert)
+    if not insert:IsA("Model") then return end
     local itemName = insert:GetAttribute("itemName")
     local health = insert:GetAttribute("health")
     local shopItem = insert:GetAttribute("isShopItem")
@@ -82,6 +83,7 @@ local function isCollectableDetected(insert)
 end
 
 local function isRockDetected(insert)
+    if not insert:IsA("Model") then return end
     local nameList = {"Rock", "Crystal", "Erupted"}
 
     local itemName = insert:GetAttribute("itemName")
@@ -109,6 +111,7 @@ local function isRockDetected(insert)
 end
 
 local function isHorseDetected(insert)
+    if not insert:IsA("Model") then return end
     if not insert:FindFirstChild("OverheadPart") then return false end
     local species = insert:GetAttribute("species")
     local owner = insert:GetAttribute("owner")
@@ -374,12 +377,19 @@ do
                 if isRockDetected(v) then
                     targetMesh = findTargetMeshPart(v)
                     if targetMesh then
-                        if RocksWhitelist.Value == "All" then
+                        if RocksWhitelist.Value.All then
                             target = v
                             break
                         else
-                            if containsName(v.GetAttribute("itemName"), RocksWhitelist.Values) then
-                                target = v
+                            local itemName = v:GetAttribute("itemName")
+                            for n, _ in pairs(RocksWhitelist.Value) do
+                                if string.find(itemName, n) then
+                                    print(itemName)
+                                    target = v
+                                    break
+                                end
+                            end
+                            if target then
                                 break
                             end
                         end
@@ -400,67 +410,56 @@ do
 
     -- Auto Farm Toggle Detection
     ToggleAutoFarm:OnChanged(function()
-        local target = nil
-        local targetMesh = nil
-        local heartbeatConnection = nil
+        local target, targetMesh, heartbeatConnection = nil, nil, nil
 
         local function resetTarget()
-            target = nil
-            targetMesh = nil
+            target, targetMesh = nil, nil
             if heartbeatConnection then
                 heartbeatConnection:Disconnect()
                 heartbeatConnection = nil
             end
         end
 
-        local scanLoop = coroutine.create(function()
-            while ToggleAutoFarm.Value do
+        local function startHeartbeat()
+            if heartbeatConnection then return end
 
+            heartbeatConnection = RunService.Heartbeat:Connect(function()
+                if target and targetMesh and ToggleAutoFarm.Value then
+                    Player.Character.HumanoidRootPart.CFrame = targetMesh.CFrame + Vector3.new(0, 8, 0)
+                    Player.Character.HumanoidRootPart.Velocity = Vector3.zero
+                else
+                    resetTarget()
+                end
+            end)
+        end
+
+        local function startAutoFarm()
+            task.wait(0.5)
+            while ToggleAutoFarm.Value do
+                if AutoFarmSelect.Value == "Rocks" and target then
+                    local remoteEvent = game:GetService("ReplicatedStorage").Communication.Functions:GetChildren()[tonumber(remote)]
+                    remoteEvent:FireServer("", "Engage", target)
+                end
+                task.wait(tonumber(Delay.Value))
+            end
+        end
+
+        local function scanForTargets()
+            while ToggleAutoFarm.Value do
                 if not target or not targetMesh then
                     target, targetMesh = scanForTarget()
-                end
-
-                if target and targetMesh then
-                    if not heartbeatConnection then
-                        heartbeatConnection = RunService.Heartbeat:Connect(function()
-                            if target and targetMesh and ToggleAutoFarm.Value then
-                                local offset = Vector3.new(0, 8, 0)
-                                Player.Character.HumanoidRootPart.CFrame = targetMesh.CFrame + offset
-                            else
-                                resetTarget()
-                            end
-                        end)
+                    if target and targetMesh then
+                        targetMesh.Destroying:Connect(resetTarget)
+                        startHeartbeat()
+                        coroutine.wrap(startAutoFarm)()
                     end
-
-                    if AutoFarmSelect.Value == "Rocks" and target then
-                        task.wait(0.5)
-                        if AutoFarmSelect.Value == "Rocks" then
-                            local remoteEvent = game:GetService("ReplicatedStorage").Communication.Functions:GetChildren()[tonumber(remote)]
-                            local args = {
-                                [1] = "",
-                                [2] = "Engage",
-                                [3] = target
-                            }
-                            remoteEvent:FireServer(unpack(args))
-                        end
-    
-                    end
-
-                    targetMesh.Destroying:Wait()
-                    resetTarget()
-                else
-                    wait(1)
                 end
+                task.wait(1)
             end
-
-            resetTarget()
-        end)
-
-        if ToggleAutoFarm.Value then
-            coroutine.resume(scanLoop)
-        else
             resetTarget()
         end
+
+        coroutine.wrap(scanForTargets)()
     end)
 
     -- Teleport
@@ -481,8 +480,8 @@ do
 
     -- Spawn Detection
     Workspace.Islands.DescendantAdded:Connect(function(insert)
-        if not insert:IsA("Model") then return end
         task.wait(0.1)
+        if not insert:IsA("Model") then return end
 
         -- Detect Falling Lava
         if NoFallingLava.Value and insert.Name == "FallingLava" then
