@@ -7,7 +7,7 @@ local RunService = game:GetService("RunService")
 local Player = game:GetService("Players").LocalPlayer
 
 horseList = {"Akhal-Teke", "Andalusian", "Appaloosa", "Arabian", "Clydesdale", "Dutch Warmblood", "Fjord", "Friesian", "Icelandic", "Marwari", "Mustang", "Paint Horse", "Percheron", "Quarter Horse", "Shire", "Thoroughbred"}
-rockList = {"All", "Amethyst", "Bronze", "Copper", "Diamond", "Emerald", "Gold", "Iron", "Prismatic", "Tin", "Erupted"}
+rockList = {"All", "Amethyst", "Bronze", "Copper", "Diamond", "Emerald", "Gold", "Iron", "Prismatic", "Quartz", "Tin", "Topaz", "Erupted"}
 islandList = {"Mainland", "Blizzard Island", "Forest Island", "Royal Island", "Desert Island", "Mountain Island", "Jungle Island", "Lunar Island", "Volcano Island", "Training island", "RP Island", "Wild Island", "Trading Hub", "Breeding Hub"}
 
 local tool = nil
@@ -481,7 +481,6 @@ do
     -- Spawn Detection
     Workspace.Islands.DescendantAdded:Connect(function(insert)
         task.wait(0.1)
-        if not insert:IsA("Model") then return end
 
         -- Detect Falling Lava
         if NoFallingLava.Value and insert.Name == "FallingLava" then
