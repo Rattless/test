@@ -449,6 +449,11 @@ do
                 if not target or not targetMesh then
                     target, targetMesh = scanForTarget()
                     if target and targetMesh then
+                        for _, v in pairs(target:GetDescendants()) do
+                            if v:IsA("TouchTransmitter") then
+                                v:Destroy()
+                            end
+                        end
                         targetMesh.Destroying:Connect(resetTarget)
                         startHeartbeat()
                         coroutine.wrap(startAutoFarm)()
