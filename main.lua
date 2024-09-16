@@ -184,11 +184,9 @@ do
     Tabs.Main:AddButton({
         Title = "Disable Lava",
         Callback = function()
-            for _, v in pairs(workspace:GetDescendants()) do
+            for _, v in pairs(workspace.Islands["Volcano Island"].LavaParts:GetDescendants()) do
                 if v:IsA("TouchTransmitter") then
-                    if v.Parent.Name == "Part" then
-                        v:Destroy()
-                    end
+                    v:Destroy()
                 end
             end
             Fluent:Notify({
