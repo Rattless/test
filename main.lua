@@ -449,6 +449,7 @@ do
                         for _, v in pairs(target:GetDescendants()) do
                             if v:IsA("TouchTransmitter") then
                                 v:Destroy()
+                                v.Destroying:Wait()
                             end
                         end
                         targetMesh.Destroying:Connect(resetTarget)
