@@ -457,7 +457,7 @@ do
                         coroutine.wrap(startAutoFarm)()
                     end
                 end
-                task.wait(0.1)
+                task.wait(1)
             end
             resetTarget()
         end
