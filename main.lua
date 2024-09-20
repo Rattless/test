@@ -7,28 +7,25 @@ local RunService = game:GetService("RunService")
 local Player = game:GetService("Players").LocalPlayer
 
 horseList = {"Akhal-Teke", "Andalusian", "Appaloosa", "Arabian", "Clydesdale", "Dutch Warmblood", "Fjord", "Friesian", "Icelandic", "Marwari", "Mustang", "Paint Horse", "Percheron", "Quarter Horse", "Shire", "Thoroughbred"}
-rockList = {"All", "Amethyst", "Bronze", "Copper", "Diamond", "Emerald", "Gold", "Iron", "Prismatic", "Quartz", "Tin", "Topaz", "Erupted"}
+rockList = {"All", "Amethyst", "Bronze", "Copper", "Diamond", "Emerald", "Gold", "Iron", "Prismatic", "Quartz", "Ruby", "Tin", "Topaz", "Erupted"}
 islandList = {"Mainland", "Blizzard Island", "Forest Island", "Royal Island", "Desert Island", "Mountain Island", "Jungle Island", "Lunar Island", "Volcano Island", "Training island", "RP Island", "Wild Island", "Trading Hub", "Breeding Hub"}
 
 local tool = nil
+local currentIsland = nil
 local remote = 1
 local remoteFound = false
 horseEspTable = {}
 collectableEspTable = {}
 rockEspTable = {}
 
-function getList(all)
+function updateCurrentIsland()
     local Islands = Workspace.Islands
-    local currentIsland = nil
-
     for _, v in pairs(Islands:GetDescendants()) do
         if v.Name == Player.Name then
             currentIsland = v.Parent
             break
         end
     end
-
-    return currentIsland:GetDescendants()
 end
 
 function callRemoteFunctions(...)
@@ -164,7 +161,6 @@ do
     -- Main
     local NotifyHorse = Tabs.Main:AddToggle("Notify Horse Spawn", {
         Title = "Notify Horse Spawn",
-        Description = "Notify when horses spawn",
         Default = false
     })
 
@@ -174,6 +170,11 @@ do
         Values = horseList,
         Multi = true,
         Default = {"Shire"}
+    })
+
+    local NotifyEruptedDeposit = Tabs.Main:AddToggle("Notifly Erupted Deposit", {
+        Title = "Notify Erupted Deposit",
+        Default = false
     })
 
     local NoFallingLava = Tabs.Main:AddToggle("No Falling Lava", {
@@ -198,6 +199,11 @@ do
     })
 
     -- Visuals
+    local EspOnlyCurrent = Tabs.Visuals:AddToggle("Esp Only Current", {
+        Title = "Only Current Island",
+        Default = true
+    })
+
     local HorseEsp = Tabs.Visuals:AddToggle("Horse Esp", {
         Title = "Horse Esp",
         Default = false
@@ -230,8 +236,9 @@ do
 
     -- Visuals Toggle Detection
     HorseEsp:OnChanged(function()
+        updateCurrentIsland()
         if HorseEsp.Value then
-            for i, v in pairs(getList(false)) do
+            for i, v in pairs(if EspOnlyCurrent.Value then currentIsland:GetDescendants() else workspace.Islands:GetDescendants()) do
                 if isHorseDetected(v) then
                     local breedLabel = v.OverheadPart:FindFirstChild("Overhead") and v.OverheadPart.Overhead:FindFirstChild("BreedLabel")
                     local e = esp(v, breedLabel.Text,HorseEspColor.Value)
@@ -250,8 +257,9 @@ do
     end)
 
     CollectablesEsp:OnChanged(function()
+        updateCurrentIsland()
         if CollectablesEsp.Value then
-            for i, v in pairs(getList(false)) do
+            for i, v in pairs(if EspOnlyCurrent.Value then currentIsland:GetDescendants() else workspace.Islands:GetDescendants()) do
                 local item = isCollectableDetected(v)
                 if item then
                     local itemName = item:GetAttribute("itemName")
@@ -271,8 +279,9 @@ do
     end)
 
     RockEsp:OnChanged(function()
+        updateCurrentIsland()
         if RockEsp.Value then
-            for i, v in pairs(getList(false)) do
+            for i, v in pairs(if EspOnlyCurrent.Value then currentIsland:GetDescendants() else workspace.Islands:GetDescendants()) do
                 local item = isRockDetected(v)
                 if item then
                     local itemName = item:GetAttribute("itemName")
@@ -333,10 +342,18 @@ do
         Default = {"All"}
     })
 
-    local OnlyCurrent = Tabs.AutoFarm:AddToggle("Only Current Island", {
+    local FarmOnlyCurrent = Tabs.AutoFarm:AddToggle("Only Current Island", {
         Title = "Only Current Island",
         Description = "Only farm from current island",
         Default = false
+    })
+
+    local HeightOffset = Tabs.AutoFarm:AddSlider("Height Offset", {
+        Title = "Height Offset",
+        Default = 0,
+        Min = -10,
+        Max = 10,
+        Rounding = 1
     })
 
     local RemoteId = Tabs.AutoFarm:AddInput("RemoteId", {
@@ -352,8 +369,8 @@ do
 
     local Delay = Tabs.AutoFarm:AddInput("Delay", {
         Title = "Delay",
-        Default = 1,
-        Placeholder = 1,
+        Default = 10,
+        Placeholder = 10,
         Numeric = true,
         Finished = true,
     })
@@ -363,7 +380,7 @@ do
         local targetMesh = nil
 
         if AutoFarmSelect.Value == "Horses" then
-            for i, v in pairs(getList(not OnlyCurrent.Value)) do
+            for i, v in pairs(if FarmOnlyCurrent.Value then currentIsland:GetDescendants() else workspace.Islands:GetDescendants()) do
                 if isHorseDetected(v) then
                     target = v
                     targetMesh = findTargetMeshPart(v)
@@ -371,7 +388,7 @@ do
                 end
             end
         elseif AutoFarmSelect.Value == "Rocks" then
-            for i, v in pairs(getList(true)) do
+            for i, v in pairs(if FarmOnlyCurrent.Value then currentIsland:GetDescendants() else workspace.Islands:GetDescendants()) do
                 if isRockDetected(v) then
                     targetMesh = findTargetMeshPart(v)
                     if targetMesh then
@@ -394,7 +411,7 @@ do
                 end
             end
         elseif AutoFarmSelect.Value == "Collectables" then
-            for i, v in pairs(getList(true)) do
+            for i, v in pairs(if FarmOnlyCurrent.Value then currentIsland:GetDescendants() else workspace.Islands:GetDescendants()) do
                 if isCollectableDetected(v) then
                     target = v
                     targetMesh = findTargetMeshPart(v)
@@ -407,6 +424,7 @@ do
 
     -- Auto Farm Toggle Detection
     ToggleAutoFarm:OnChanged(function()
+        updateCurrentIsland()
         local target, targetMesh, heartbeatConnection = nil, nil, nil
 
         local function resetTarget()
@@ -422,7 +440,7 @@ do
 
             heartbeatConnection = RunService.Heartbeat:Connect(function()
                 if target and targetMesh and ToggleAutoFarm.Value then
-                    Player.Character.HumanoidRootPart.CFrame = targetMesh.CFrame + Vector3.new(0, 8, 0)
+                    Player.Character.HumanoidRootPart.CFrame = targetMesh.CFrame + Vector3.new(0, HeightOffset.Value, 0)
                     Player.Character.HumanoidRootPart.Velocity = Vector3.zero
                 else
                     resetTarget()
@@ -433,7 +451,10 @@ do
         local function startAutoFarm()
             task.wait(0.5)
             while ToggleAutoFarm.Value do
-                if AutoFarmSelect.Value == "Rocks" and target then
+                if AutoFarmSelect.Value == "Horses" and target then
+                    local remoteEvent = game:GetService("ReplicatedStorage").Communication.Events:GetChildren()[tonumber(remote)]
+                    remoteEvent:FireServer(tool, "Activate", target)
+                elseif AutoFarmSelect.Value == "Rocks" then
                     local remoteEvent = game:GetService("ReplicatedStorage").Communication.Functions:GetChildren()[tonumber(remote)]
                     remoteEvent:FireServer("", "Engage", target)
                 end
@@ -495,14 +516,17 @@ do
         if isHorseDetected(insert) then
             local breedLabel = insert.OverheadPart:FindFirstChild("Overhead") and insert.OverheadPart.Overhead:FindFirstChild("BreedLabel")
 
-            -- Nofify
+            -- Nofify Horse
             if NotifyHorse.Value then
-                if table.find(NotifyHorseList.Values, breedLabel.Text) then
-                    Fluent:Notify({
-                        Title = "Horse Spawned",
-                        Content = breedLabel.Text,
-                        Duration = 5
-                    })
+                for n, _ in pairs(NotifyHorseList.Value) do
+                    if string.find(breedLabel.Text, n) then
+                        Fluent:Notify({
+                            Title = "Horse Spawned",
+                            Content = breedLabel.Text,
+                            Duration = 5
+                        })
+                        break
+                    end
                 end
             end
 
@@ -511,7 +535,6 @@ do
                 local e = esp(insert, breedLabel.Text, HorseEspColor.Value)
                 table.insert(horseEspTable, e)
             end
-
         end
 
         -- Detect Collectables
@@ -526,7 +549,7 @@ do
             end
         end
 
-        -- Detect Ores
+        -- Detect Rocks
         local rock = isRockDetected(insert)
         if rock then
             local itemName = rock:GetAttribute("itemName")
@@ -536,6 +559,17 @@ do
             if RockEsp.Value then
                 local e = esp(rock, itemName, if mesh then mesh.Color else RockEspColor.Value)
                 table.insert(rockEspTable, e)
+            end
+
+            -- Notify Erupted Deposit
+            if NotifyEruptedDeposit.Value then
+                if itemName == "Erupted Deposit" then
+                    Fluent:Notify({
+                        Title = "Erupted Deposit",
+                        Content = "Erupted Deposit has spawned.",
+                        Duration = 5
+                    })
+                end
             end
         end
 
