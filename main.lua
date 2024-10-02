@@ -112,8 +112,8 @@ local function isHorseDetected(insert)
     if not insert:FindFirstChild("OverheadPart") then return false end
     local species = insert:GetAttribute("species")
     local owner = insert:GetAttribute("owner")
-    local parent = insert.Parent
-    if species == "Horse" and not owner and parent.Name == "Animals" then
+    local shopItem = insert:GetAttribute("isShopItem")
+    if species == "Horse" and not owner and not shopItem then
         return true
     end
     return false
