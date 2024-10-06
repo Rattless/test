@@ -153,6 +153,7 @@ local Tabs = {
     Main = Window:AddTab({ Title = "Main", Icon = "house" }),
     Visuals = Window:AddTab({ Title = "Visuals", Icon = "eye" }),
     AutoFarm = Window:AddTab({ Title = "Auto Farm", Icon = "lasso" }),
+    AutoRace = Window:AddTab({ Title = "Auto Race", Icon = "flag" }),
     Teleport = Window:AddTab({ Title = "Teleport", Icon = "plane" }),
     Settings = Window:AddTab({ Title = "Settings", Icon = "settings" })
 }
@@ -484,6 +485,72 @@ do
         end
 
         coroutine.wrap(scanForTargets)()
+    end)
+
+    --Auto Race
+    local ToggleAutoRace = Tabs.AutoRace:AddToggle("Auto Race", {
+        Title = "Auto Race",
+        Description = "Start Auto Race",
+        Default = false
+    })
+
+    local ToggleAutoRaceTpBack = Tabs.AutoRace:AddToggle("Auto Race Tp Back", {
+        Title = "Teleport Back",
+        Description = "Teleport back to original position after chehckpoint.",
+        Default = false
+    })
+
+    local RaceHeightOffset = Tabs.AutoRace:AddSlider("Race Height Offset", {
+        Title = "Height Offset",
+        Default = 20,
+        Min = 0,
+        Max = 100,
+        Rounding = 1
+    })
+
+    local RaceTeleportDelay = Tabs.AutoRace:AddSlider("Race Teleport Delay", {
+        Title = "Teleport Delay",
+        Default = 0.5,
+        Min = 0,
+        Max = 5,
+        Rounding = 1
+    })
+
+    function startRace()
+        updateCurrentIsland()
+        local race = currentIsland:FindFirstChild("Race Start"):FindFirstChild("Race Start")
+        if race then
+            Player.Character.HumanoidRootPart.CFrame = race.CFrame
+            task.wait(0.5)
+            callRemoteEvents("Start", race)
+        end
+    end
+
+    function tpCheckpoint()
+        local oldpos = Player.Character.HumanoidRootPart.CFrame
+
+        local checkpointMarker = workspace:FindFirstChild("CheckpointMarker")
+        if checkpointMarker and checkpointMarker:FindFirstChild("Collision") then
+            Player.Character.HumanoidRootPart.CFrame = checkpointMarker.Collision.CFrame + Vector3.new(0, RaceHeightOffset.Value, 0)
+            Player.Character.HumanoidRootPart.Velocity = Vector3.zero
+            task.wait(RaceTeleportDelay.Value)
+            if ToggleAutoRaceTpBack.Value then
+                Player.Character.HumanoidRootPart.CFrame = oldpos
+            end
+        else
+            startRace()
+            task.wait(7)
+        end
+    end
+
+
+    ToggleAutoRace:OnChanged(function()
+        if ToggleAutoRace.Value then
+            while ToggleAutoRace.Value do
+                tpCheckpoint()
+                task.wait(0.1)
+            end
+        end
     end)
 
     -- Teleport
